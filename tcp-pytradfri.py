@@ -10,7 +10,7 @@ import asyncio
 import uuid
 import argparse
 
-ADDR = "localhost"
+ADDR = ""
 PORT = 8675
 DATA_SIZE = 1024
 
@@ -52,7 +52,6 @@ DATA_SIZE = 1024
 
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serversocket.bind((ADDR, PORT))
-print("Socket bind {}::{}".format(ADDR, PORT))
 serversocket.listen(1)
 while True:
     (clientsocket, address) = serversocket.accept()
@@ -71,3 +70,4 @@ while True:
                 #         blind_command = blind.blind_control.set_state(cmd[2])
                 #         await api(blind_command)
                 print("Set blind {} to {}%".format(cmd[1], cmd[2]))
+                clientsocket.sendall(data)
