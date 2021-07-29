@@ -50,24 +50,38 @@ DATA_SIZE = 1024
 #     devices = await api(devices_commands)
     # blinds = [dev for dev in devices if dev.has_blind_control]
 
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serversocket.bind((ADDR, PORT))
-serversocket.listen(1)
-while True:
-    (clientsocket, address) = serversocket.accept()
-    with clientsocket:
-        print('Connection from', address)
+
+
+class TcpPyTradfri():
+    def __init__(self):
+        self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serversocket.bind((ADDR, PORT))
+        self.serversocket.listen(1)
+
+    def run(self):
         while True:
-            # protocol - [device type],[address],[level]
-            data = clientsocket.recv(DATA_SIZE)
-            print(data.decode('utf-8'))
-            if not data:
-                break
-            cmd = data.decode('utf-8').split(',')
-            if (cmd[0] == 'b'):
-                # for (blind in blinds):
-                #     if (blind.id == cmd[1]):
-                #         blind_command = blind.blind_control.set_state(cmd[2])
-                #         await api(blind_command)
-                print("Set blind {} to {}%".format(cmd[1], cmd[2]))
-                clientsocket.sendall(data)
+            (clientsocket, address) = self.serversocket.accept()
+            with clientsocket:
+                print('Connection from', address)
+                while True:
+                    # protocol - [device type],[address],[level]
+                    data = clientsocket.recv(DATA_SIZE)
+                    print(data.decode('utf-8'))
+                    if not data:
+                        break
+                    cmd = data.decode('utf-8').split(',')
+                    if (cmd[0] == 'b'):
+                        # for (blind in blinds):
+                        #     if (blind.id == cmd[1]):
+                        #         blind_command = blind.blind_control.set_state(cmd[2])
+                        #         await api(blind_command)
+                        print("Set blind {} to {}%".format(cmd[1], cmd[2]))
+                        clientsocket.sendall(data)
+                
+def main():
+    print("TcpPyTradfri Startup!")
+    tcpPyTradfri = TcpPyTradfri()
+    tcpPyTradfri.run()
+
+if __name__ == "__main__":
+    main()
