@@ -42,7 +42,7 @@ integer_function findIndex(long_integer idx)
 socketconnect socket
 {    
 	makestring(req$, "%s,%ld,%ld", cmd$, id[glmai], MULDIV(blind_control[glmai], 100, 65535));
-	trace("%s\n", req$);
+	trace("%s", req$);
 	socketSend(socket,req$);
 }
 
@@ -51,7 +51,7 @@ socketreceive socket
 	trace("rx: %s", socket.SocketRxBuf);
 	fb$ = REMOVE(",", socket.SocketRxBuf);
 	id$ = LEFT(REMOVE(",", socket.SocketRxBuf),5);
-	lid = atoi(id$);
+	lid = atol(id$);
 	level = atoi(socket.SocketRxBuf);
 	if (FIND("b", fb$))
 	{
@@ -75,7 +75,7 @@ release blind_p
 	glmai = GetLastModifiedArrayIndex();
 	makestring(cmd$, "b");
 	socketConnectClient(socket, IPADDR, PORT, 0);
-	blind_fb[glmai] = blind_control[glmai];
+	//blind_fb[glmai] = blind_control[glmai];
 }
 
 release get_charge
