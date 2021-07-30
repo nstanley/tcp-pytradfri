@@ -1,0 +1,90 @@
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+#define_constant NUM_BLINDS 14
+                              
+digital_input get_charge[NUM_BLINDS];
+digital_input blind_p[NUM_BLINDS];
+analog_input blind_control[NUM_BLINDS];
+
+analog_output charge_fb[NUM_BLINDS];
+analog_output _skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_;
+analog_output blind_fb[NUM_BLINDS];
+          
+long_integer_parameter id[NUM_BLINDS];
+string_parameter IPADDR[15];
+integer_parameter PORT;
+                         
+tcp_client socket[2000];
+string req$[255];
+integer glmai;  
+string cmd$[1];
+string fb$[2];
+string id$[6];   
+long_integer lid;
+integer level;
+             
+
+integer_function findIndex(long_integer idx)
+{
+	integer x;
+	for (x = 1 to NUM_BLINDS)
+	{
+     	if (lid = id[x])
+		{
+			return (x);
+		}
+	}
+	return (0);
+}
+
+socketconnect socket
+{    
+	makestring(req$, "%s,%ld,%ld", cmd$, id[glmai], MULDIV(blind_control[glmai], 100, 65535));
+	trace("%s\n", req$);
+	socketSend(socket,req$);
+}
+
+socketreceive socket
+{
+	trace("rx: %s", socket.SocketRxBuf);
+	fb$ = REMOVE(",", socket.SocketRxBuf);
+	id$ = LEFT(REMOVE(",", socket.SocketRxBuf),5);
+	lid = atoi(id$);
+	level = atoi(socket.SocketRxBuf);
+	if (FIND("b", fb$))
+	{
+		trace("blind %ld to %d%%", lid, level); 
+		level = MULDIV(level, 65535, 100);
+		blind_fb[findIndex(lid)] = level;
+	}
+	else if (FIND("c", fb$))
+	{
+		trace("charge %ld to %d%%", lid, level);
+		level = MULDIV(level, 65535, 100);
+		charge_fb[findIndex(lid)] = level;
+	}
+	clearbuffer(socket.SocketRxBuf);
+	socketDisconnectClient(socket);
+}
+
+
+release blind_p
+{
+	glmai = GetLastModifiedArrayIndex();
+	makestring(cmd$, "b");
+	socketConnectClient(socket, IPADDR, PORT, 0);
+	blind_fb[glmai] = blind_control[glmai];
+}
+
+release get_charge
+{
+	glmai = GetLastModifiedArrayIndex();
+	makestring(cmd$, "c");
+	socketConnectClient(socket, IPADDR, PORT, 0);
+}
+
+function Main()
+{
+}

@@ -68,13 +68,13 @@ class TcpPyTradfri():
                     "back of your Tradfri gateway using the "
                     "-K flag."
                 )
-        api = api_factory.request
+        self.api = api_factory.request
 
         gateway = Gateway()
 
         devices_command = gateway.get_devices()
-        devices_commands = await api(devices_command)
-        devices = await api(devices_commands)
+        devices_commands = await self.api(devices_command)
+        devices = await self.api(devices_commands)
         self.blinds = [dev for dev in devices if dev.has_blind_control]
         for blind in self.blinds:
             print("Found blind {}, \"{}\"".format(blind.id, blind.name))
@@ -91,13 +91,21 @@ class TcpPyTradfri():
                     if not data:
                         break
                     cmd = data.decode('utf-8').split(',')
+                    devId = int(cmd[1])
+                    level = int(cmd[2])
+                    # blind control
                     if (cmd[0] == 'b'):
-                        # for (blind in blinds):
-                        #     if (blind.id == cmd[1]):
-                        #         blind_command = blind.blind_control.set_state(cmd[2])
-                        #         await api(blind_command)
-                        print("Set blind {} to {}%".format(cmd[1], cmd[2]))
-                        clientsocket.sendall(data)
+                        for blind in self.blinds:
+                            if (int(blind.id) == devId):
+                                print("Set blind {} to {}%".format(devId, level))
+                                blind_command = blind.blind_control.set_state(level)
+                                await self.api(blind_command)
+                                clientsocket.sendall(data)
+                    # get batter charge
+                    elif (cmd[0] == 'c'):
+                        for blind in self.blinds:
+                            if (int(blind.id) == devId):
+                                clientsocket.sendall("c,{},{}".format(blind.id, blind.device_info.battery_level).encode())
                 
 async def main():
     print("TcpPyTradfri Startup!")
