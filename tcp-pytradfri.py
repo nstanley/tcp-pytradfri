@@ -106,6 +106,24 @@ class TcpPyTradfri():
                         for blind in self.blinds:
                             if (int(blind.id) == devId):
                                 clientsocket.sendall("c,{},{}".format(blind.id, blind.device_info.battery_level).encode())
+                    elif (cmd[0] == 'u'):
+                        for blind in self.blinds:
+                            blind_command = blind.blind_control.set_state(0)
+                            await self.api(blind_command)
+                            print("Set blind {} to 0 (up)".format(blind.id))
+                        clientsocket.sendall(data)
+                    elif (cmd[0] == 'd'):
+                        for blind in self.blinds:
+                            blind_command = blind.blind_control.set_state(100)
+                            await self.api(blind_command)
+                            print("Set blind {} to 0 (down)".format(blind.id))
+                        clientsocket.sendall(data)
+                    elif (cmd[0] == 's'):
+                        for blind in self.blinds:
+                            blind_command = blind.blind_control.trigger_blind()
+                            await self.api(blind_command)
+                            print("Stop blind {}".format(blind.id))
+                        clientsocket.sendall(data)
                 
 async def main():
     print("TcpPyTradfri Startup!")
